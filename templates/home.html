@@ -1,0 +1,37 @@
+<!-- Adapted from Prof. Frankl's Flask Demo -->
+<html>
+<head>
+</head>
+<body>
+<form action="/uploadImage" method="POST" enctype="multipart/form-data">
+	<h1>Welcome {{username}}</h1> 
+	<input type="file" name = "imageToUpload" required/> </br>
+	<input type="submit" value = Upload />
+</form>
+
+<style type="text/css">
+	table, th, td{
+		border: 1px solid black;
+	}
+</style>
+
+Here are your photos:
+
+<table>
+	<th>Time</th>
+	<th>Photo</th>
+
+{% for line in photos %}
+	<tr>
+		<td>{{line.postingdate}}</td>
+		<td>{{line.photoID}}</td>
+	</tr>
+{% endfor %}
+</table>
+
+<a href="/logout">Logout</a>
+
+</body>
+
+
+</html>
