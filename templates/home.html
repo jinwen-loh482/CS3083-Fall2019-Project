@@ -3,12 +3,13 @@
 <head>
 </head>
 <body>
+	<!--
 <form action="/uploadImage" method="POST" enctype="multipart/form-data">
 	<h1>Welcome {{username}}</h1> 
 	<input type="file" name = "imageToUpload" required/> </br>
 	<input type="submit" value = Upload />
 </form>
-
+-->
 <style type="text/css">
 	table, th, td{
 		border: 1px solid black;
@@ -28,7 +29,7 @@ Here are your photos:
 	</tr>
 {% endfor %}
 </table>
-
+<a href="/uploadStart">Upload a Photo</a>
 <a href="/logout">Logout</a>
 
 </body>

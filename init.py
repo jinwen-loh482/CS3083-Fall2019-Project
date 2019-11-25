@@ -120,18 +120,74 @@ def logout():
     session.pop("username")
     return redirect("/")
 
-@app.route("/uploadImage", methods=["POST"])
+@app.route("/uploadStart")
 @login_required
-def upload_image():
+def upload_start():
+    return render_template("all_followers_redirect.html")
+
+@app.route("/allFollowers")
+@login_required
+def upload_to_all_followers():
+    return render_template("all_followers.html")
+
+#select groups only
+@app.route("/groupFollowers")
+@login_required
+def upload_to_group_followers():
+    user = session['username']
+    cursor = connection.cursor();
+    query = 'SELECT owner_username, groupName FROM BelongTo WHERE %s = member_username'
+    cursor.execute(query, user)
+    data = cursor.fetchall()
+    cursor.close()
+    return render_template('group_followers.html', groups=data)
+
+
+@app.route("/uploadImageAll", methods=["POST"])
+@login_required
+def upload_image_all():
     if request.files:
         user = session['username']
         image_file = request.files.get("imageToUpload", "")
         image_name = image_file.filename
         filepath = os.path.join(IMAGES_DIR, image_name)
         image_file.save(filepath)
-        query = "INSERT INTO Photo (postingdate, filePath, photoPoster) VALUES (%s, %s, %s)"
+        query = "INSERT INTO Photo (postingdate, filePath, allFollowers, photoPoster) VALUES (%s, %s, 1, %s)"
         with connection.cursor() as cursor:
             cursor.execute(query, (time.strftime('%Y-%m-%d %H:%M:%S'), image_name, user))
+        message = "Image has been successfully uploaded."
+        return render_template("upload.html", message=message)
+    else:
+        message = "Failed to upload image."
+        return render_template("upload.html", message=message)
+
+@app.route("/uploadImageGroup", methods=["POST"])
+@login_required
+def upload_image_group():
+    if request.files:
+        user = session['username']
+        image_file = request.files.get("imageToUpload", "")
+        image_name = image_file.filename
+        filepath = os.path.join(IMAGES_DIR, image_name)
+        image_file.save(filepath)
+        query = "INSERT INTO Photo (postingdate, filePath, allFollowers, photoPoster) VALUES (%s, %s, 0, %s)"
+        with connection.cursor() as cursor:
+                cursor.execute(query, (time.strftime('%Y-%m-%d %H:%M:%S'), image_name, user))
+        # get latest photo by user
+        query = "SELECT MAX(photoID) as max FROM Photo WHERE photoPoster = %s"
+        with connection.cursor() as cursor:
+                cursor.execute(query, (user))
+        data = cursor.fetchone()
+        data = data.get("max")
+
+        groups = request.form.getlist('groups')
+        for line in groups:
+            group_arr = line.split('::')
+            owner_username = group_arr[0]
+            owner_groupName = group_arr[1]
+            query = "INSERT INTO SharedWith (groupOwner, groupName, photoID) VALUES (%s, %s, %s)"
+            with connection.cursor() as cursor:
+                cursor.execute(query, (owner_username, owner_groupName, data))
         message = "Image has been successfully uploaded."
         return render_template("upload.html", message=message)
     else:

@@ -1,0 +1,18 @@
+<html>
+<head>
+</head>
+<body>
+<form action="/uploadImageGroup" method="POST" enctype="multipart/form-data">
+	<h1>Choose photo to upload</h1> 
+	<input type="file" name = "imageToUpload" required/> </br>
+	{% for line in groups %}
+	<input type="checkbox" name="groups" value={{line.owner_username}}::{{line.groupName}}>{{line.owner_username}}::{{line.groupName}}</input>
+		<br>
+	{% endfor %}
+
+	<input type="submit" value = Upload />
+</form>
+</body>
+
+
+</html>
