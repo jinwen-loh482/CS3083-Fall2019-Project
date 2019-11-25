@@ -8,3 +8,6 @@ ZhengYi Li (zl1499@nyu.edu) <br /> <br />
 
 The query for part 3.1a is in 3.1a.sql <br />
 The complete implementation for Feature 3 is submitted under the commit "Completed Implementations for Feature 3", which must include all previous commits. <br />
+
+Link to video demonstration for part 3 (Turn Down Your Volume!!!): <br />
+https://stream.nyu.edu/media/project_part3_demo-2019/0_xyovofxs <br /> <br />
