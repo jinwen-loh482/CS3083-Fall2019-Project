@@ -1,0 +1,34 @@
+<html>
+<head>
+</head>
+
+<body>
+<style type="text/css">
+	table, th, td{
+		border: 1px solid black;
+	}
+</style>
+
+Here are your friends' photos:
+
+<table>
+	<th>Time</th>
+	<th>Photo</th>
+	<th>Time Posted</th>
+
+{% for line in photos %}
+	<tr>
+		<!-- make link dynamic for Feature 2 -->
+		<td><a href>{{line.photoID}}</a></td>
+		<td>{{line.photoPoster}}</td>
+		<td>{{line.postingDate}}</td>
+	</tr>
+{% endfor %}
+</table>
+
+<a href="/home">Back to Home</a> 
+<br>
+<a href="/logout">Logout</a>
+</body>
+
+</html>
