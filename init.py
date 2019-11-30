@@ -40,12 +40,54 @@ def index():
 @app.route("/home")
 @login_required
 def home():
-    return render_template("home.html", username=session["username"])
+    username = session["username"]
+    query = """SELECT photoID, photoPoster, postingDate
+               FROM Photo
+               WHERE photoID in (
+               SELECT photoID
+               FROM Photo
+               WHERE photoID IN 
+               (SELECT photoID
+                FROM SharedWith NATURAL JOIN BelongTo
+                WHERE member_username = %s) UNION
+               (SELECT photoID
+               FROM Photo Join Follow ON Photo.photoPoster = Follow.username_followed
+               WHERE username_follower = %s AND followstatus = 1 AND allFollowers=1))
+               ORDER BY postingDate DESC"""
+    with connection.cursor() as cursor:
+        cursor.execute(query, (username, username))
+    data = cursor.fetchall()
+    return render_template("home.html", username=session["username"], photos = data)
 
+#Feature 1
+@app.route("/viewVisiblePhotos")
+@login_required
+def seeVisiblePhotos():
+    username = session["username"]
+    query = """SELECT photoID, photoPoster, postingDate
+               FROM Photo
+               WHERE photoID in (
+               SELECT photoID
+               FROM Photo
+               WHERE photoID IN 
+               (SELECT photoID
+                FROM SharedWith NATURAL JOIN BelongTo
+                WHERE member_username = %s) UNION
+               (SELECT photoID
+               FROM Photo Join Follow ON Photo.photoPoster = Follow.username_followed
+               WHERE username_follower = %s AND followstatus = 1 AND allFollowers=1))
+               ORDER BY postingDate DESC"""
+    with connection.cursor() as cursor:
+        cursor.execute(query, (username, username))
+    data = cursor.fetchall()
+    return render_template("visible_list.html", username=session["username"], photos = data)
+
+# Part of Feature 3
 @app.route("/upload", methods=["GET"])
 @login_required
 def upload():
     return render_template("upload.html")
+#
 
 @app.route("/images", methods=["GET"])
 @login_required
@@ -120,6 +162,7 @@ def logout():
     session.pop("username")
     return redirect("/")
 
+# Feature 3
 @app.route("/uploadStart")
 @login_required
 def upload_start():
