@@ -41,6 +41,7 @@ def index():
 @login_required
 def home():
     username = session["username"]
+    # fix this
     query = """SELECT photoID, photoPoster, postingDate
                FROM Photo
                WHERE photoID in (
@@ -64,7 +65,7 @@ def home():
 @login_required
 def seeVisiblePhotos():
     username = session["username"]
-    query = """SELECT photoID, photoPoster, postingDate
+    query = """SELECT photoID, photoPoster, postingDate, filePath
                FROM Photo
                WHERE photoID in (
                SELECT photoID
@@ -89,14 +90,18 @@ def upload():
     return render_template("upload.html")
 #
 
-@app.route("/images", methods=["GET"])
+# Redirect here to view photo details for Feature 2
+# Have link to click to view photo
+@app.route("/images/<photo_ID>", methods=["GET"])
 @login_required
-def images():
-    query = "SELECT * FROM Photo"
+def images(photo_ID):
+    poster_details = """SELECT photoID, firstName, lastName, postingDate, filepath
+               FROM Photo JOIN Person ON (photoPoster = username)
+               WHERE photoID = %s"""
     with connection.cursor() as cursor:
-        cursor.execute(query)
-    data = cursor.fetchall()
-    return render_template("images.html", images=data)
+        cursor.execute(poster_details, photo_ID)
+    data = cursor.fetchone()
+    return render_template("images.html", poster_details=data)
 
 @app.route("/image/<image_name>", methods=["GET"])
 def image(image_name):
