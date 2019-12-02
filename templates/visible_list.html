@@ -12,14 +12,13 @@
 Here are your friends' photos:
 
 <table>
-	<th>Time</th>
 	<th>Photo</th>
+	<th>Poster</th>
 	<th>Time Posted</th>
 
 {% for line in photos %}
 	<tr>
-		<!-- make link dynamic for Feature 2 -->
-		<td><a href>{{line.photoID}}</a></td>
+		<td><a href="/images/{{line.photoID}}">{{line.photoID}}</a></td>
 		<td>{{line.photoPoster}}</td>
 		<td>{{line.postingDate}}</td>
 	</tr>

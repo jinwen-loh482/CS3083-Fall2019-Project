@@ -1,0 +1,26 @@
+<html>
+<head></head>
+<body>
+<style type="text/css">
+	table, th, td{
+		border: 1px solid black;
+	}
+</style>
+
+People tagged in this photo: <br>
+
+<table>
+	<th>Username</th>
+	<th>Name</th>
+
+{% for line in tagged %}
+	<tr>
+		<td>{{line.username}}</td>
+		<td>{{line.firstName}} {{line.lastName}}</td>
+	</tr>
+{% endfor %}
+</table>
+<br>
+<a href="/home">Back to Home</a>
+</body>
+</html>

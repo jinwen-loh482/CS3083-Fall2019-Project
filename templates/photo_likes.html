@@ -1,0 +1,26 @@
+<html>
+<head></head>
+<body>
+<style type="text/css">
+	table, th, td{
+		border: 1px solid black;
+	}
+</style>
+People who liked your photos: <br>
+
+<table>
+	<th>Username</th>
+	<th>Rating</th>
+
+{% for line in likes %}
+	<tr>
+		<td>{{line.username}}</td>
+		<td>{{line.rating}}</td>
+	</tr>
+{% endfor %}
+</table>
+<br>
+<a href="/home">Back to Home</a>
+
+</body>
+</html>
