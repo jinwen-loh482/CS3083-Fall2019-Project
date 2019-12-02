@@ -44,19 +44,9 @@ def home():
     # fix this
     query = """SELECT photoID, photoPoster, postingDate
                FROM Photo
-               WHERE photoID in (
-               SELECT photoID
-               FROM Photo
-               WHERE photoID IN 
-               (SELECT photoID
-                FROM SharedWith NATURAL JOIN BelongTo
-                WHERE member_username = %s) UNION
-               (SELECT photoID
-               FROM Photo Join Follow ON Photo.photoPoster = Follow.username_followed
-               WHERE username_follower = %s AND followstatus = 1 AND allFollowers=1))
-               ORDER BY postingDate DESC"""
+               WHERE photoPoster = %s"""
     with connection.cursor() as cursor:
-        cursor.execute(query, (username, username))
+        cursor.execute(query, username)
     data = cursor.fetchall()
     return render_template("home.html", username=session["username"], photos = data)
 
@@ -95,13 +85,22 @@ def upload():
 @app.route("/images/<photo_ID>", methods=["GET"])
 @login_required
 def images(photo_ID):
-    poster_details = """SELECT photoID, firstName, lastName, postingDate, filepath
+    # query to get poster details
+    query = """SELECT photoID, firstName, lastName, postingDate, filepath
                FROM Photo JOIN Person ON (photoPoster = username)
                WHERE photoID = %s"""
     with connection.cursor() as cursor:
-        cursor.execute(poster_details, photo_ID)
-    data = cursor.fetchone()
-    return render_template("images.html", poster_details=data)
+        cursor.execute(query, photo_ID)
+    poster_data = cursor.fetchone()
+    # query to get like details
+    query = """SELECT DISTINCT COUNT(username) AS total
+               FROM Likes
+               WHERE photoID = %s"""
+    with connection.cursor() as cursor:
+        cursor.execute(query, photo_ID)
+    likes_data = cursor.fetchone()
+
+    return render_template("images.html", poster_details=poster_data, likes_details=likes_data)
 
 @app.route("/image/<image_name>", methods=["GET"])
 def image(image_name):
@@ -241,6 +240,28 @@ def upload_image_group():
     else:
         message = "Failed to upload image."
         return render_template("upload.html", message=message)
+
+@app.route("/photoLikes/<photo_ID>")
+@login_required
+def like_user_details(photo_ID):
+    query = """SELECT username, rating
+               FROM Likes
+               WHERE photoID = %s"""
+    with connection.cursor() as cursor:
+        cursor.execute(query, photo_ID)
+    data = cursor.fetchall()
+    return render_template("photo_likes.html", likes=data)
+
+@app.route("/taggedUsers/<photo_ID>")
+@login_required
+def tagged_user_details(photo_ID):
+    query = """ SELECT username, firstName, lastName
+                FROM Tagged NATURAL JOIN Person
+                WHERE photoID=%s AND tagstatus=1"""
+    with connection.cursor() as cursor:
+        cursor.execute(query, photo_ID)
+    data = cursor.fetchall()
+    return render_template("tagged_users.html", tagged=data)
 
 if __name__ == "__main__":
     if not os.path.isdir("images"):
