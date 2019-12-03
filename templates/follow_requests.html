@@ -1,0 +1,24 @@
+<html>
+<head></head>
+<body>
+<style type="text/css">
+	table, th, td{
+		border: 1px solid black;
+	}
+</style>
+Here are your follow requests:
+<table>
+	<th>Request From</th>
+	<th>Decision</th>
+
+{% for line in followRequests %}
+	<tr>
+		<td><a href="/profileSearchHandler/{{line.username_follower}}">{{line.username_follower}}</td>
+		<td><a href="/acceptRequestHandler/{{line.username_follower}}">Accept</a> / <a href="/deleteRequestHandler/{{line.username_follower}}">Decline</a></td>
+	</tr>
+{% endfor %}
+</table>
+<br>
+<a href="/home">Back to Home</a>
+</body>
+</html>

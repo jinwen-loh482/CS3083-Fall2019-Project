@@ -1,0 +1,14 @@
+<html>
+<head></head>
+<body>
+Enter profile username to lookup:
+<form action="/profileSearchFormHandler" method="POST">
+	<input type="text" name="username" placeholder="username" required/> <br><br>
+	<input type="submit" value = Submit />
+	{% if error %}
+		<p class="error"><strong>Error:</strong> {{error}}</p>
+	{% endif %}
+</form>
+<a href="/home">Back to Home</a>
+</body>
+</html>
