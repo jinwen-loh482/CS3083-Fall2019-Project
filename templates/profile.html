@@ -1,0 +1,37 @@
+<html>
+<head></head>
+<body>
+<style type="text/css">
+	table, th, td{
+		border: 1px solid black;
+	}
+</style>
+<H2>Profile</H2>
+Username: {{personData.username}} <br>
+Name: {{personData.firstName}} {{personData.lastName}} <br>
+Bio: {{personData.bio}} <br>
+{% if personData.username!=user %}
+	{% if followStatus.followstatus==1 %}
+		<a href="/deleteFollowHandler/{{personData.username}}">Unfollow</a>
+	{% elif followStatus.followstatus==0 %}
+		<a href="/deleteFollowHandler/{{personData.username}}">Delete Follow Request</a>
+	{% else %}
+		<a href="/followHandler/{{personData.username}}">Follow</a>
+	<br>
+	{% endif %}
+{% endif %}
+<br>
+Photos:
+<table>
+	<th>Photo</th>
+	<th>Time Posted</th>
+
+{% for line in photoData %}
+	<tr>
+		<td><a href="/images/{{line.photoID}}">{{line.photoID}}</a></td>
+		<td>{{line.postingDate}}</td>
+	</tr>
+{% endfor %}
+</table>
+</body>
+</html>

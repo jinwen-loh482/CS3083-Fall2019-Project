@@ -263,6 +263,97 @@ def tagged_user_details(photo_ID):
     data = cursor.fetchall()
     return render_template("tagged_users.html", tagged=data)
 
+#Code for feature 4
+@app.route("/viewProfileSearch")
+@login_required
+def follow_redirect():
+    return render_template("search_profile.html")
+
+@app.route("/profileSearchFormHandler", methods=["POST"])
+@login_required
+def profile_search_form_handler():
+    if request.form:
+        requestData = request.form
+        searchUsername=requestData["username"]
+        url = "/profileSearchHandler/%s" % searchUsername
+        return redirect(url)
+    else:
+        error = "Unknown error occurred. Please try again."
+        return render_template("search_profile.html", error=error)
+
+@app.route("/profileSearchHandler/<target_user>", methods=["GET"])
+@login_required
+def profile_search_handler(target_user):
+    if target_user:
+        searchUsername = target_user
+        username = session['username']
+
+        query = """SELECT username, firstName, lastName, bio
+                   FROM Person
+                   WHERE username=%s"""
+        with connection.cursor() as cursor:
+            cursor.execute(query, searchUsername)
+        personData = cursor.fetchone()
+        # if data not empty
+        if personData:
+            if target_user!=username:
+                query = """SELECT photoID, postingDate
+                           FROM Photo
+                           WHERE photoID IN
+                           (SELECT photoID
+                            FROM SharedWith NATURAL JOIN BelongTo NATURAL JOIN Photo
+                            WHERE member_username=%s AND photoPoster=%s) OR photoID IN
+                           (SELECT photoID
+                            FROM Photo Join Follow ON Photo.photoPoster=Follow.username_followed
+                            WHERE username_follower=%s AND followstatus=1 AND allFollowers=1 AND photoPoster=%s)
+                            ORDER BY postingDate DESC"""
+
+                with connection.cursor() as cursor:
+                    cursor.execute(query, (username, searchUsername, username, searchUsername))
+                photoData = cursor.fetchall()
+
+                query = """SELECT followstatus
+                           FROM Follow
+                           WHERE username_follower=%s AND username_followed=%s"""
+                with connection.cursor() as cursor:
+                    cursor.execute(query, (username, searchUsername))
+                followStatus = cursor.fetchone()
+                return render_template("profile.html", personData=personData, photoData=photoData, followStatus=followStatus, user=session['username'])
+            else:
+                query = """SELECT photoID, photoPoster, postingDate
+                           FROM Photo
+                           WHERE photoPoster=%s"""
+                with connection.cursor() as cursor:
+                    cursor.execute(query, username)
+                photoData = cursor.fetchall()
+                return render_template("profile.html", personData=personData, photoData=photoData, user=session['username'])
+
+        error = """Cannot find user with username '%s' """ % searchUsername
+        return render_template("search_profile.html", error=error)
+    error = "Unknown error occurred. Please try again."
+    return render_template("search_profile.html", error=error)
+
+@app.route("/followHandler/<target_username>")
+@login_required
+def follow_handler(target_username):
+    username = session['username']
+    query = """INSERT INTO Follow (username_followed, username_follower, followstatus) 
+               VALUES(%s, %s, 0)"""
+    with connection.cursor() as cursor:
+        cursor.execute(query, (target_username, username))
+    url = "/profileSearchHandler/%s" % target_username
+    return redirect(url)
+
+@app.route("/deleteFollowHandler/<target_username>")
+@login_required
+def delete_follow_handler(target_username):
+    username = session['username']
+    query = """DELETE FROM Follow WHERE username_followed=%s AND username_follower=%s"""
+    with connection.cursor() as cursor:
+        cursor.execute(query, (target_username, username))
+    url = "/profileSearchHandler/%s" % target_username
+    return redirect(url)
+
 if __name__ == "__main__":
     if not os.path.isdir("images"):
         os.mkdir(IMAGES_DIR)
