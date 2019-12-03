@@ -41,35 +41,43 @@ def index():
 @login_required
 def home():
     username = session["username"]
-    # fix this
     query = """SELECT photoID, photoPoster, postingDate
                FROM Photo
                WHERE photoPoster = %s"""
     with connection.cursor() as cursor:
         cursor.execute(query, username)
     data = cursor.fetchall()
-    return render_template("home.html", username=session["username"], photos = data)
+
+    query = """SELECT firstName, lastName
+               FROM Person
+               WHERE username=%s"""
+    with  connection.cursor() as cursor:
+        cursor.execute(query, username)
+    name=cursor.fetchone()
+    return render_template("home.html", username=username, photos=data, name=name)
 
 #Feature 1
 @app.route("/viewVisiblePhotos")
 @login_required
 def seeVisiblePhotos():
     username = session["username"]
-    query = """SELECT photoID, photoPoster, postingDate, filePath
+    query = """SELECT DISTINCT(photoID), photoPoster, postingDate, filePath
                FROM Photo
-               WHERE photoID in (
-               SELECT photoID
-               FROM Photo
-               WHERE photoID IN 
+               WHERE photoID IN
                (SELECT photoID
                 FROM SharedWith NATURAL JOIN BelongTo
-                WHERE member_username = %s) UNION
+                WHERE member_username=%s) 
+               OR photoID IN
                (SELECT photoID
-               FROM Photo Join Follow ON Photo.photoPoster = Follow.username_followed
-               WHERE username_follower = %s AND followstatus = 1 AND allFollowers=1))
+                FROM Photo Join Follow ON Photo.photoPoster=Follow.username_followed
+                WHERE username_follower=%s AND followstatus=1 AND allFollowers=1)
+               OR photoID IN
+               (SELECT photoID
+                FROM Photo
+                WHERE photoPoster=%s)
                ORDER BY postingDate DESC"""
     with connection.cursor() as cursor:
-        cursor.execute(query, (username, username))
+        cursor.execute(query, (username, username, username))
     data = cursor.fetchall()
     return render_template("visible_list.html", username=session["username"], photos = data)
 
@@ -86,7 +94,7 @@ def upload():
 @login_required
 def images(photo_ID):
     # query to get poster details
-    query = """SELECT photoID, firstName, lastName, postingDate, filepath
+    query = """SELECT photoID, photoPoster, firstName, lastName, postingDate, filepath
                FROM Photo JOIN Person ON (photoPoster = username)
                WHERE photoID = %s"""
     with connection.cursor() as cursor:
@@ -189,6 +197,11 @@ def upload_to_group_followers():
     cursor.close()
     return render_template('group_followers.html', groups=data)
 
+#private photo
+@app.route("/privatePhoto")
+@login_required
+def upload_to_myself():
+    return render_template('just_myself.html')
 
 @app.route("/uploadImageAll", methods=["POST"])
 @login_required
@@ -235,6 +248,24 @@ def upload_image_group():
             query = "INSERT INTO SharedWith (groupOwner, groupName, photoID) VALUES (%s, %s, %s)"
             with connection.cursor() as cursor:
                 cursor.execute(query, (owner_username, owner_groupName, data))
+        message = "Image has been successfully uploaded."
+        return render_template("upload.html", message=message)
+    else:
+        message = "Failed to upload image."
+        return render_template("upload.html", message=message)
+
+@app.route("/uploadImageMyself", methods=["POST"])
+@login_required
+def upload_image_myself():
+    if request.files:
+        user = session['username']
+        image_file = request.files.get("imageToUpload", "")
+        image_name = image_file.filename
+        filepath = os.path.join(IMAGES_DIR, image_name)
+        image_file.save(filepath)
+        query = "INSERT INTO Photo (postingdate, filePath, allFollowers, photoPoster) VALUES (%s, %s, 0, %s)"
+        with connection.cursor() as cursor:
+            cursor.execute(query, (time.strftime('%Y-%m-%d %H:%M:%S'), image_name, user))
         message = "Image has been successfully uploaded."
         return render_template("upload.html", message=message)
     else:
@@ -352,6 +383,38 @@ def delete_follow_handler(target_username):
     with connection.cursor() as cursor:
         cursor.execute(query, (target_username, username))
     url = "/profileSearchHandler/%s" % target_username
+    return redirect(url)
+
+@app.route("/manageFollowRequests")
+@login_required
+def manage_follow_requests():
+    username=session["username"]
+    query = """SELECT username_follower
+               FROM Follow
+               WHERE username_followed=%s AND followstatus=0"""
+    with connection.cursor() as cursor:
+        cursor.execute(query, username)
+    data = cursor.fetchall()
+    return render_template("follow_requests.html", followRequests=data)
+
+@app.route("/deleteRequestHandler/<target_username>")
+@login_required
+def delete_request_handler(target_username):
+    username = session['username']
+    query = """DELETE FROM Follow WHERE username_followed=%s AND username_follower=%s"""
+    with connection.cursor() as cursor:
+        cursor.execute(query, (username, target_username))
+    url = "/manageFollowRequests"
+    return redirect(url)
+
+@app.route("/acceptRequestHandler/<target_username>")
+@login_required
+def accept_request_handler(target_username):
+    username = session['username']
+    query = """UPDATE Follow SET followstatus=1 WHERE username_followed=%s AND username_follower=%s"""
+    with connection.cursor() as cursor:
+        cursor.execute(query, (username, target_username))
+    url = "/manageFollowRequests"
     return redirect(url)
 
 if __name__ == "__main__":

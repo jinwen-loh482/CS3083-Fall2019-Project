@@ -13,11 +13,13 @@ Bio: {{personData.bio}} <br>
 {% if personData.username!=user %}
 	{% if followStatus.followstatus==1 %}
 		<a href="/deleteFollowHandler/{{personData.username}}">Unfollow</a>
+		<br>
 	{% elif followStatus.followstatus==0 %}
 		<a href="/deleteFollowHandler/{{personData.username}}">Delete Follow Request</a>
+		<br>
 	{% else %}
 		<a href="/followHandler/{{personData.username}}">Follow</a>
-	<br>
+		<br>
 	{% endif %}
 {% endif %}
 <br>
@@ -33,5 +35,9 @@ Photos:
 	</tr>
 {% endfor %}
 </table>
+<br>
+<a href="/viewProfileSearch">Look Up Another Profile</a>
+<br>
+<a href="/home">Back to Home</a>
 </body>
 </html>
