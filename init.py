@@ -464,7 +464,7 @@ def create_friendgroup_form_handler():
         with connection.cursor() as cursor:
             cursor.execute(query, username)
         data = cursor.fetchall()
-        message="successfully created freindgroup '%s'" % newFriendgroup
+        message="successfully created friendgroup '%s'" % newFriendgroup
         return render_template("create_friendgroup.html", message=message, username=username, ownedGroups=data)
     else:
         query = """SELECT groupName, description
@@ -475,6 +475,24 @@ def create_friendgroup_form_handler():
         data = cursor.fetchall()
         error = "Unknown error occurred. Please try again."
         return render_template("create_friendgroup.html", error=error, username=username, ownedGroups=data)
+# feature 15
+@app.route("/updateBio")
+@login_required
+def update_bio():
+    return render_template("update_bio.html", username=session['username'])
+
+@app.route("/updateBioFormHandler", methods=["POST"])
+@login_required
+def update_bio_form_handler():
+    username=session['username']
+    if request.form:
+        requestData = request.form
+        newBio=requestData["new_bio"]
+        query="""UPDATE Person SET bio=%s WHERE username=%s"""
+        with connection.cursor() as cursor:
+            cursor.execute(query, (newBio, username))
+        message = "Bio updated!"
+    return render_template("update_bio.html", username=session['username'], message=message)
 
 if __name__ == "__main__":
     if not os.path.isdir("images"):

@@ -1,0 +1,16 @@
+<html>
+<head></head>
+<body>
+{% if message %}
+	<p>{{message}}</p><br>
+{% endif %}
+Enter your new bio:
+<form action="/updateBioFormHandler" method="POST">
+	<input type="text" name="new_bio" placeholder="bio"/> <br><br>
+	<input type="submit" value = Submit />
+</form>
+<a href="/profileSearchHandler/{{username}}">View Your Profile</a>
+<br><br>
+<a href="/home">Back to Home</a>
+</body>
+</html>
