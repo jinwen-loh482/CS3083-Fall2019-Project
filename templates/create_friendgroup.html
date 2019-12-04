@@ -1,0 +1,39 @@
+<html>
+<head>
+</head>
+<body>
+<style type="text/css">
+	table, th, td{
+		border: 1px solid black;
+	}
+</style>
+
+Enter name for the friendgroup you want to create:
+<form action="/createFriendGroupFormHandler" method="POST">
+	<input type="text" name="friendgroup" placeholder="friendgroup" required/> <br>
+	<input type="text" name="description" placeholder="description"/> <br>
+	<input type="submit" value = Submit />
+	{% if error %}
+		<p class="error"><strong>Error:</strong> {{error}}</p>
+	{% endif %}
+	{% if message %}
+		<p>Successfully created new friendgroup</p>
+	{% endif %}
+</form>
+<br>
+<H3>Here are the friendgroups you own:</H3>
+<table>
+	<th>Group Name</th>
+	<th>Description</th>
+
+{% for line in ownedGroups %}
+	<tr>
+		<td>{{line.groupName}}</a></td>
+		<td>{{line.description}}</td>
+	</tr>
+{% endfor %}
+</table>
+<br>
+<a href="/home">Back to Home</a>
+</body>
+</html>

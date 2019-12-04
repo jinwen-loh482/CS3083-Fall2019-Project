@@ -417,6 +417,65 @@ def accept_request_handler(target_username):
     url = "/manageFollowRequests"
     return redirect(url)
 
+# Feature 12
+@app.route("/createFriendGroup")
+@login_required
+def create_friendgroup():
+    username = session["username"]
+    query = """SELECT groupName, description
+               FROM Friendgroup
+               WHERE groupOwner=%s"""
+    with connection.cursor() as cursor:
+        cursor.execute(query, username)
+    data = cursor.fetchall()
+    return render_template("create_friendgroup.html", ownedGroups=data, username=username)
+
+@app.route("/createFriendGroupFormHandler", methods=["POST"])
+@login_required
+def create_friendgroup_form_handler():
+    username = session["username"]
+    if request.form:
+        username=session["username"]
+        requestData = request.form
+        newFriendgroup=requestData["friendgroup"]
+        newDescription=requestData["description"]
+        try:
+            with connection.cursor() as cursor:
+                query = "INSERT INTO Friendgroup (groupOwner, groupName, description) VALUES (%s, %s, %s)"
+                with connection.cursor() as cursor:
+                    cursor.execute(query, (username, newFriendgroup, newDescription))
+        except pymysql.err.IntegrityError:
+            query = """SELECT groupName, description
+               FROM Friendgroup
+               WHERE groupOwner=%s"""
+            with connection.cursor() as cursor:
+                cursor.execute(query, username)
+            data = cursor.fetchall()
+            error = "You already own friendgroup %s" % (newFriendgroup)
+            return render_template('create_friendgroup.html', error=error, username=username, ownedGroups=data)   
+        query = """INSERT INTO BelongTo (member_username, owner_username, groupName)
+                   VALUES (%s, %s, %s)"""
+        with connection.cursor() as cursor:
+            cursor.execute(query, (username, username, newFriendgroup))
+
+        query = """SELECT groupName, description
+               FROM Friendgroup
+               WHERE groupOwner=%s"""
+        with connection.cursor() as cursor:
+            cursor.execute(query, username)
+        data = cursor.fetchall()
+        message="successfully created freindgroup '%s'" % newFriendgroup
+        return render_template("create_friendgroup.html", message=message, username=username, ownedGroups=data)
+    else:
+        query = """SELECT groupName, description
+               FROM Friendgroup
+               WHERE groupOwner=%s"""
+        with connection.cursor() as cursor:
+            cursor.execute(query, username)
+        data = cursor.fetchall()
+        error = "Unknown error occurred. Please try again."
+        return render_template("create_friendgroup.html", error=error, username=username, ownedGroups=data)
+
 if __name__ == "__main__":
     if not os.path.isdir("images"):
         os.mkdir(IMAGES_DIR)
