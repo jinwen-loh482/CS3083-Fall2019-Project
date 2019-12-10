@@ -13,6 +13,10 @@ Bio: {{personData.bio}} <br>
 {% if personData.username!=user %}
 	{% if followStatus.followstatus==1 %}
 		<a href="/deleteFollowHandler/{{personData.username}}">Unfollow</a>
+		#KEREM FEATURES
+		<a href="/deleteFollowandTagHandler/{{personData.username}}">Unfollow</a>
+		<br>
+		<a href="/groupAddHandler/{{personData.username}}">Add to a group</a>
 		<br>
 	{% elif followStatus.followstatus==0 %}
 		<a href="/deleteFollowHandler/{{personData.username}}">Delete Follow Request</a>

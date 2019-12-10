@@ -14,7 +14,6 @@ IMAGES_DIR = os.path.join(os.getcwd(), "images")
 
 connection = pymysql.connect(host="localhost",
                              user="root",
-                             password="password",
                              db="Finstagram",
                              charset="utf8mb4",
                              port=3306,
@@ -384,7 +383,45 @@ def delete_follow_handler(target_username):
         cursor.execute(query, (target_username, username))
     url = "/profileSearchHandler/%s" % target_username
     return redirect(url)
+#KEREM FEATURES START HERE
+@app.route("/deleteFollowandTagHandler/<target_username>")
+@login_required
+def delete_follow_and_tag_handler(target_username):
+    username = session['username']
+    query = """DELETE FROM Tagged WHERE username=%s AND photoID IN (SELECT photoID FROM photo WHERE photoPoster=%s)"""
+    query2="""DELETE FROM Follow WHERE (username_followed=%s AND username_follower=%s)"""
+    with connection.cursor() as cursor:
+        cursor.execute(query, (target_username, username))
+        cursor.execute(query,(username, target_username))
+        cursor.execute(query2,(target_username, username))
+    url = "/profileSearchHandler/%s" % target_username
+    return redirect(url)
+@app.route("/groupAddHandler/<add_person>")
+@login_required
+def groupAddHandler(add_person):
+    username = session["username"]
+    print(add_person)
+    #need a way to pass person added's name.
+    #this query allows us to eliminate the ones the person is already in.
+    query = """SELECT groupName FROM friendgroup WHERE groupOwner=%s AND groupName 
+               NOT IN (SELECT groupName FROM belongto WHERE member_username=%s)"""
+    with connection.cursor() as cursor:
+        cursor.execute(query,(username,add_person))
+    data=cursor.fetchall()
+    print(data)
+    return render_template("group_add.html",username=username,data=data,add_person=add_person)
 
+@app.route("/addtoGroup/<add_person>,<group_name>")
+def addtoGroup(add_person,group_name):
+    print("Add Person: " + add_person)
+    username=session["username"]
+    query="""INSERT INTO `belongto` (`member_username`, `owner_username`, `groupName`) VALUES (%s,%s,%s)"""
+    with connection.cursor() as cursor:
+        cursor.execute(query,(add_person,username,group_name))
+    url = "/groupAddHandler/%s" % add_person
+    print(url)
+    return redirect(url)
+#KEREM FEATURES END HERE.
 @app.route("/manageFollowRequests")
 @login_required
 def manage_follow_requests():

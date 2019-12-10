@@ -1,0 +1,26 @@
+#KEREM FEATURES
+<html>
+<head></head>
+<body>
+<style type="text/css">
+	table, th, td{
+		border: 1px solid black;
+	}
+</style>
+Here are groups that you own and the person is not already in:
+<table>
+	<th>Group Name</th>
+	<th>Add the person</th>
+
+{% for line in data %}
+	<tr>
+        <td><a>{{line.groupName}}</a></td>
+		<td><a href="/addtoGroup/{{add_person}},{{line.groupName}}">Add</a> </td>
+
+	</tr>
+{% endfor %}
+</table>
+<br>
+<a href="/home">Back to Home</a>
+</body>
+</html>
