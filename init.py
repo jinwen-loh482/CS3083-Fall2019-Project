@@ -463,34 +463,44 @@ def search_poster():
         requestData = request.form
         posterName = requestData["postername"]
         userName = session["username"]
-        query = """SELECT photoID, postingDate
-                   FROM Photo
-                   WHERE photoID IN
-                   (SELECT photoID
-                    FROM Photo JOIN Follow ON Photo.photoPoster = Follow.username_followed
-                    WHERE username_followed = %s
-                      AND username_follower = %s 
-                      AND followstatus = 1
-                      AND allFollowers = 1)
-                    OR photoID IN
+        if userName == posterName:
+            query = "SELECT photoID, postingDate FROM photo WHERE photoPoster = %s"
+            try:
+                with connection.cursor() as cursor:
+                    cursor.execute(query, (posterName))
+            except pymysql.err.IntegrityError:
+                error = "error with query"
+                return render_template("searchPoster.html", error = error)
+        else:
+            query = """SELECT photoID, postingDate
+                    FROM Photo
+                    WHERE photoID IN
                     (SELECT photoID
-                    FROM SharedWith
-                    WHERE (groupName, groupOwner) IN (
-                        SELECT groupName, owner_username
-                        FROM BelongTo
-                        WHERE member_username = %s AND (groupName, owner_username) IN (
+                        FROM Photo JOIN Follow ON Photo.photoPoster = Follow.username_followed
+                        WHERE username_followed = %s
+                        AND username_follower = %s 
+                        AND followstatus = 1
+                        AND allFollowers = 1)
+                        OR photoID IN
+                        (SELECT photoID
+                        FROM SharedWith
+                        WHERE (groupName, groupOwner) IN (
                             SELECT groupName, owner_username
                             FROM BelongTo
-                            WHERE member_username = %s)))
-                    AND photoPoster = %s"""
-        try:
-            with connection.cursor() as cursor:
-                cursor.execute(query, (posterName, userName, posterName, userName, posterName))
-            data = cursor.fetchall()
-            return render_template("list_pic_poster.html", photoInfo = data)
-        except pymysql.err.IntegrityError:
-            error = "error with query"
-            return render_template("searchPoster.html", error = error)
+                            WHERE member_username = %s AND (groupName, owner_username) IN (
+                                SELECT groupName, owner_username
+                                FROM BelongTo
+                                WHERE member_username = %s)))
+                        AND photoPoster = %s"""
+            try:
+                with connection.cursor() as cursor:
+                    cursor.execute(query, (posterName, userName, posterName, userName, posterName))
+            except pymysql.err.IntegrityError:
+                error = "error with query"
+                return render_template("searchPoster.html", error = error)
+        
+        data = cursor.fetchall()
+        return render_template("list_pic_poster.html", photoInfo = data)
             
             
 if __name__ == "__main__":
