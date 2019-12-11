@@ -36,6 +36,16 @@ CREATE TABLE Likes (
     FOREIGN KEY(photoID) REFERENCES Photo(photoID)
 );
 
+CREATE TABLE Comments(
+    username VARCHAR(20),
+    photoID int,
+    comments VARCHAR(250),
+    commentTime DATETIME,
+    PRIMARY KEY(username, photoID, commentTime),
+    FOREIGN KEY(username) REFERENCES Person(username),
+    FOREIGN KEY(photoID) REFERENCES Photo(photoID)
+);
+
 CREATE TABLE Tagged (
     username VARCHAR(20), 
     photoID int, 

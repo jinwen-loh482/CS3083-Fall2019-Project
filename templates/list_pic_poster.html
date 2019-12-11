@@ -1,0 +1,28 @@
+<html>
+    <head>
+    </head>
+
+    <body>
+        <style type="text/css">
+        table, th, td{
+		    border: 1px solid black;
+	    }
+        </style>
+
+        This is pic post by your search poster
+
+        <table>
+            <th>Photo</th>
+            <th>Time Posted</th>
+            
+        {% for line in photoInfo %}
+            <tr>
+                <td><a href="/images/{{line.photoID}}">{{line.photoID}}</td>
+                <td>{{line.postingDate}}</td>
+            </tr>
+        {% endfor %}
+        </table>
+        <br>
+        <a href="/">Back</a>
+    </body>
+</html>

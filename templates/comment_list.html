@@ -1,0 +1,30 @@
+<html>
+    <head>
+    </head>
+
+    <body>
+        <style type="text/css">
+        table, th, td{
+		    border: 1px solid black;
+	    }
+        </style>
+
+        Here is all your comments
+
+        <table>
+            <th>comment</th>
+            <th>poster</th>
+            <th>Time Posted</th>
+            
+        {% for line in comment_all %}
+            <tr>
+                <td>{{line.comments}}</td>
+                <td>{{line.username}}</td>
+                <td>{{line.commentTime}}</td>
+            </tr>
+        {% endfor %}
+        </table>
+        <br>
+        <a href="/viewVisiblePhotos">Back to pics</a>
+    </body>
+</html>

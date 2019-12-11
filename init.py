@@ -190,7 +190,7 @@ def upload_to_all_followers():
 @login_required
 def upload_to_group_followers():
     user = session['username']
-    cursor = connection.cursor();
+    cursor = connection.cursor()
     query = 'SELECT owner_username, groupName FROM BelongTo WHERE %s = member_username'
     cursor.execute(query, user)
     data = cursor.fetchall()
@@ -417,7 +417,83 @@ def accept_request_handler(target_username):
     url = "/manageFollowRequests"
     return redirect(url)
 
+@app.route("/addCommentsHandler/<photoID>", methods=["POST","GET"])
+@login_required
+def add_comments_pic(photoID):
+    # comments can be added by one user mutiple times
+    if request.form:
+        requestData = request.form
+        comments = requestData["comment"]
+        username = session['username']
+        try:
+            query = "INSERT INTO Comments (username, photoID, comments, commentTime) VALUES (%s, %s, %s, %s)"
+            with connection.cursor() as cursor:
+                cursor.execute(query, (username, photoID, comments, time.strftime('%Y-%m-%d %H:%M:%S')))
+        except pymysql.err.IntegrityError:
+            error = "you already comment %s photo. " % (photoID)
+            return render_template("comment_notsuc.html")
+        
+        return redirect("/comment_success")
+
+@app.route("/comment_success")
+@login_required
+def comment_suc():
+    return render_template("comment_success.html")
+
+@app.route("/viewComments/<photoID>", methods=["POST", "GET"])
+@login_required
+def view_comments(photoID):
+    # every one can see the comments as long as they can see
+    # the pic
+    query = "SELECT * FROM Comments WHERE photoID = %s"
+    with connection.cursor() as cursor:
+        cursor.execute(query, (photoID))
+    data = cursor.fetchall()
+    return render_template("comment_list.html", comment_all = data)
+
+@app.route("/searchPosterPicture")
+@login_required
+def find_poster():
+    return render_template("searchPoster.html")
+
+@app.route("/findPoster", methods = ["POST", "GET"])
+@login_required
+def search_poster():
+    if request.form:
+        requestData = request.form
+        posterName = requestData["postername"]
+        userName = session["username"]
+        query = """SELECT photoID, postingDate
+                   FROM Photo
+                   WHERE photoID IN
+                   (SELECT photoID
+                    FROM Photo JOIN Follow ON Photo.photoPoster = Follow.username_followed
+                    WHERE username_followed = %s
+                      AND username_follower = %s 
+                      AND followstatus = 1
+                      AND allFollowers = 1)
+                    OR photoID IN
+                    (SELECT photoID
+                    FROM SharedWith
+                    WHERE (groupName, groupOwner) IN (
+                        SELECT groupName, owner_username
+                        FROM BelongTo
+                        WHERE member_username = %s AND (groupName, owner_username) IN (
+                            SELECT groupName, owner_username
+                            FROM BelongTo
+                            WHERE member_username = %s)))
+                    AND photoPoster = %s"""
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute(query, (posterName, userName, posterName, userName, posterName))
+            data = cursor.fetchall()
+            return render_template("list_pic_poster.html", photoInfo = data)
+        except pymysql.err.IntegrityError:
+            error = "error with query"
+            return render_template("searchPoster.html", error = error)
+            
+            
 if __name__ == "__main__":
     if not os.path.isdir("images"):
         os.mkdir(IMAGES_DIR)
-    app.run()
+    app.run(debug=True)

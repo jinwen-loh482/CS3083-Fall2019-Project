@@ -1,0 +1,13 @@
+<html>
+    <head>
+        <body></body>
+        Who you want to find
+        <form action="/findPoster", method="POST">
+            <input type="text" name = "postername" placeholder="postername" required/></br>
+            <input type="submit" value= Submit />
+            {% if error %}
+		        <p class="error"><strong>Error:</strong> {{error}}</p>
+	        {% endif %}
+        </form>
+    </head>
+</html>
