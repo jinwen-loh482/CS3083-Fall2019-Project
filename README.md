@@ -11,3 +11,6 @@ The complete implementation for Feature 3 is submitted under the commit "Complet
 
 Link to video demonstration for part 3 (Turn Down Your Volume!!!): <br />
 https://stream.nyu.edu/media/project_part3_demo-2019/0_xyovofxs <br /> <br />
+
+To grade just the core features, navigate to core_features branch and pull from there.
+To grade optional features of each team member, navigate to their respective branches unless specified otherwise.
